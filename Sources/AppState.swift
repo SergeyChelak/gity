@@ -20,6 +20,19 @@ class AppState: ObservableObject {
     func setup() {
         loadRecentRepositories()
     }
+    
+    func reloadRepository() {
+        guard let url = currentRepository?.url else { return }
+        do {
+            let repository = try GitRepository(url: url)
+            currentRepository = repository
+            Task {
+                await repository.loadCommits()
+            }
+        } catch {
+            print("Failed to reload repository: \(error)")
+        }
+    }
         
     func addRecentRepository(_ url: URL) {
         recentRepositories.removeAll { $0 == url }

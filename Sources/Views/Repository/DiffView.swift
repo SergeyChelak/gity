@@ -86,6 +86,7 @@ struct DiffContentView: View {
             }
         }
         .font(.system(size: 12, design: .monospaced))
+        .textSelection(.enabled)
         .frame(maxWidth: .infinity, alignment: .leading)
         .onAppear {
             parseContent()

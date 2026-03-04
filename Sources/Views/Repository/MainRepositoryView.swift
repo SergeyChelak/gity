@@ -27,6 +27,7 @@ private enum Action: Hashable {
 
 struct MainRepositoryView: View {
     @ObservedObject var repository: GitRepository
+    @EnvironmentObject var appState: AppState
     @State private var selection: SidebarSelection = .stage
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     
@@ -165,41 +166,11 @@ struct MainRepositoryView: View {
         }
         
         Task {
-            await repository.reloadAll()
-            
-            // Load commits based on current sidebar selection
-            switch selection {
-            case .stage:
-                // Stage view - reload index only, no commits needed
-                await repository.reloadIndex()
-            case .history:
-                // History view without specific branch - load all commits
-                await repository.loadCommitsForRef(nil, filter: .all)
-            case .branch(let ref):
-                // Specific local branch selected
-                await repository.loadCommitsForRef(ref, filter: .selected)
-            case .remoteBranch(let ref):
-                // Specific remote branch selected
-                await repository.loadCommitsForRef(ref, filter: .selected)
-            case .tag(let ref):
-                // Specific tag selected
-                await repository.loadCommitsForRef(ref, filter: .selected)
-            case .remote, .stash, .submodule:
-                // Other views - load all commits
-                await repository.loadCommitsForRef(nil, filter: .all)
-            }
+            // Trigger a full application reload by recreating the GitRepository
+            appState.reloadRepository()
             
             withAnimation {
                 _ = loadingActions.remove(.refresh)
-            }
-            
-            // Show appropriate toast message based on selection
-            switch selection {
-            case .stage:
-                showToast("Index refreshed")
-            default:
-                let commitCount = repository.commits.count
-                showToast("\(commitCount) commits loaded")
             }
         }
     }
