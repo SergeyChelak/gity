@@ -424,6 +424,8 @@ struct StageView: View {
                     commitMessage = ""
                     isAmend = false
                     isCommitting = false
+                    selectedStagedFileIDs.removeAll()
+                    diffContent = ""
                 }
             } catch {
                 await MainActor.run {
@@ -449,6 +451,11 @@ struct StageView: View {
         if alert.runModal() == .alertFirstButtonReturn {
             Task {
                 try? await repository.discard(files: [file])
+                await MainActor.run {
+                    selectedUnstagedFileIDs.remove(file.id)
+                    selectedStagedFileIDs.remove(file.id)
+                    diffContent = ""
+                }
             }
         }
     }
