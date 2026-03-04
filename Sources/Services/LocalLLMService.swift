@@ -234,8 +234,9 @@ class LocalLLMService: ObservableObject {
         generatedMessage = ""
         errorMessage = nil
 
-        // Diff truncation
-        let maxDiffLength = 6000
+        // Diff truncation: Increased limit for modern smaller LLMs (like Qwen2.5) which support 8k-32k context lengths
+        // 40000 characters is roughly 8000-10000 tokens
+        let maxDiffLength = 40000
         let trimmedDiff: String
         if diff.count > maxDiffLength {
             trimmedDiff = diff.prefix(maxDiffLength) + "\n\n[Diff truncated]"

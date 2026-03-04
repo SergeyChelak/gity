@@ -382,11 +382,8 @@ struct StageView: View {
                 return
             }
             
-            // Limit diff size to avoid context window overflow
-            let maxDiffLength = 6000
-            let truncatedDiff = diff.count > maxDiffLength ? String(diff.prefix(maxDiffLength)) + "\n...(truncated)" : diff
-            
-            await llmService.generateCommitMessage(diff: truncatedDiff)
+            // Pass the full diff to LocalLLMService where it manages token limits
+            await llmService.generateCommitMessage(diff: diff)
         }
     }
     
