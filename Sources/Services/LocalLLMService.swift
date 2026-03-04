@@ -85,13 +85,13 @@ class LocalLLMService: ObservableObject {
         
     let models: [AIModel] = [
         AIModel(
-            id: "qwen2.5-coder-0.5b",
-            name: "Qwen2.5-Coder-0.5B-Instruct",
-            sizeDescription: "≈0.49 GB · Q4_K_M",
+            id: "qwen2.5-coder-1.5b",
+            name: "Qwen2.5-Coder-1.5B-Instruct",
+            sizeDescription: "≈0.98 GB · Q4_K_M",
             url: URL(string:
-                "https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF/resolve/main/qwen2.5-coder-0.5b-instruct-q4_k_m.gguf"
+                "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
             )!,
-            filename: "qwen2.5-coder-0.5b-instruct-q4_k_m.gguf",
+            filename: "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
             template: .chatML()
         ),
         AIModel(
@@ -243,20 +243,32 @@ class LocalLLMService: ObservableObject {
             trimmedDiff = diff
         }
 
-        // Simple prompt for all models
+        // System Prompt tailored for generating high-quality git commit messages
         let systemPrompt = """
-        Generate a git commit message based on the diff.
+        You are an expert software developer generating a git commit message based on the provided diff.
         
-        Rules:
-        - Use Conventional Commits format: "type: subject"
-        - If multiple distinct changes are present, use a bullet list format:
-          type: summary
-          - detail 1
-          - detail 2
-        - Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert.
-        - Output ONLY the commit message, no conversational text.
+        Rules for the commit message:
+        1. Start with a Conventional Commit type (feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert).
+        2. Follow the type with a colon and a space, then a concise, imperative subject line summarizing the main change (under 50 characters).
+        3. If the diff contains multiple distinct changes, add a blank line after the subject and use a bulleted list for details.
+        4. Focus on the 'why' and 'what' of the changes, not just the 'how'.
+        5. Output ONLY the commit message itself. Do not include any introductory text, conversational filler, markdown formatting (like ```), or explanations.
         """
-        let prompt = "Diff:\n\(trimmedDiff)\n\nCommit message:"
+        
+        // Structure the prompt explicitly
+        let prompt = """
+        Review the following diff and generate a git commit message following the rules.
+        
+        Diff:
+        \(trimmedDiff)
+        
+        Commit message:
+        """
+
+        // Clear previous output state and context history
+        bot.setOutput(to: "")
+        bot.reset()
+
 
         // Use chatML template for all models
         bot.template = .chatML(systemPrompt)
