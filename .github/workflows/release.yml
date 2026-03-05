@@ -158,32 +158,10 @@ jobs:
         name: v${{ steps.version.outputs.version }}
         draft: false
         prerelease: false
+        generate_release_notes: true
         files: |
           GitY.dmg
           GitY.zip
-        body: |
-          ## GitY v${{ steps.version.outputs.version }}
-          
-          ### Installation (Recommended: Homebrew)
-          ```bash
-          brew install --cask dongri/tap/gity
-          ```
-          
-          ### Manual Installation
-          1. Download `GitY.dmg`
-          2. Open the DMG file
-          3. Drag GitY.app to Applications folder
-          4. Double-click to launch! ✨
-          
-          > **Note**: GitY is signed and notarized by Apple, so it will launch without any security warnings.
-          
-          ### Command Line Tool
-          After installing, open GitY and go to **Settings > Integration** to install the `gity` command line tool.
-          
-          ```bash
-          gity .                    # Open current directory
-          gity /path/to/repo        # Open specific repository
-          ```
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
