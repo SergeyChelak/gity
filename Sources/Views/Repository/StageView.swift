@@ -94,8 +94,8 @@ struct StageView: View {
                         onDoubleClick: {
                             stageSelectedUnstagedFiles()
                         },
-                        onDiscard: { file in
-                            discardFile(file)
+                        onDiscard: { files in
+                            discardFiles(files)
                         }
                     )
                 }
@@ -440,20 +440,25 @@ struct StageView: View {
         }
     }
     
-    private func discardFile(_ file: ChangedFile) {
+    private func discardFiles(_ files: [ChangedFile]) {
+        guard !files.isEmpty else { return }
+        
         let alert = NSAlert()
-        alert.messageText = "Discard Changes?"
-        alert.informativeText = "Are you sure you want to discard changes to '\(file.filename)'? This action cannot be undone."
+        alert.messageText = "Discard \(files.count == 1 ? "Changes" : "\(files.count) Files")?"
+        let filesText = files.count == 1 ? "'\(files.first!.filename)'" : "\(files.count) files"
+        alert.informativeText = "Are you sure you want to discard changes to \(filesText)? This action cannot be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Discard Changes")
         alert.addButton(withTitle: "Cancel")
         
         if alert.runModal() == .alertFirstButtonReturn {
             Task {
-                try? await repository.discard(files: [file])
+                try? await repository.discard(files: files)
                 await MainActor.run {
-                    selectedUnstagedFileIDs.remove(file.id)
-                    selectedStagedFileIDs.remove(file.id)
+                    for file in files {
+                        selectedUnstagedFileIDs.remove(file.id)
+                        selectedStagedFileIDs.remove(file.id)
+                    }
                     diffContent = ""
                 }
             }
@@ -467,7 +472,7 @@ struct FileListView: NSViewRepresentable {
     let files: [ChangedFile]
     @Binding var selectedFileIDs: Set<String>
     let onDoubleClick: () -> Void
-    var onDiscard: ((ChangedFile) -> Void)? = nil
+    var onDiscard: (([ChangedFile]) -> Void)? = nil
     
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -554,12 +559,12 @@ struct FileListView: NSViewRepresentable {
         var files: [ChangedFile]
         var selectedFileIDs: Set<String>
         var onDoubleClick: () -> Void
-        var onDiscard: ((ChangedFile) -> Void)?
+        var onDiscard: (([ChangedFile]) -> Void)?
         var updateSelection: ((Set<String>) -> Void)?
         weak var tableView: NSTableView?
         var isUpdatingSelection = false
         
-        init(files: [ChangedFile], selectedFileIDs: Set<String>, onDoubleClick: @escaping () -> Void, onDiscard: ((ChangedFile) -> Void)?) {
+        init(files: [ChangedFile], selectedFileIDs: Set<String>, onDoubleClick: @escaping () -> Void, onDiscard: (([ChangedFile]) -> Void)?) {
             self.files = files
             self.selectedFileIDs = selectedFileIDs
             self.onDoubleClick = onDoubleClick
@@ -649,8 +654,18 @@ struct FileListView: NSViewRepresentable {
         
         @objc func handleDiscard(_ sender: NSMenuItem) {
             guard let tableView = tableView, tableView.clickedRow >= 0 && tableView.clickedRow < files.count else { return }
-            let file = files[tableView.clickedRow]
-            onDiscard?(file)
+            
+            let selectedRows = tableView.selectedRowIndexes
+            if selectedRows.contains(tableView.clickedRow) && selectedRows.count > 1 {
+                let selectedFiles = selectedRows.compactMap { row -> ChangedFile? in
+                    guard row >= 0 && row < files.count else { return nil }
+                    return files[row]
+                }
+                onDiscard?(selectedFiles)
+            } else {
+                let file = files[tableView.clickedRow]
+                onDiscard?([file])
+            }
         }
     }
 }
