@@ -15,11 +15,8 @@ struct ClearableTextField: View {
     
     // Optional parameters
     var promptSymbol: String? = nil
-    var height: CGFloat = 36
     var cornerRadius: CGFloat = 16
-    var backgroundColor: Color = Color(.systemFill)
     var textColor: Color = .primary
-    var placeholderColor: Color = .gray
     
     @FocusState private var isFocused: Bool
     
@@ -83,9 +80,7 @@ struct ClearableTextField: View {
         ClearableTextField(
             placeholder: "Filter",
             text: .constant(""),
-            height: 34,
-            cornerRadius: 6,
-            backgroundColor: Color(.systemFill)
+            cornerRadius: 6
         )
     }
     .padding()
