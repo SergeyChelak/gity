@@ -70,10 +70,13 @@ struct HistoryView: View {
                         .pointingHandCursor()
                         
                         Spacer()
-                                                
-                        TextField("🔍 Subject, Author, SHA", text: $searchText)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 400)
+                        
+                        ClearableTextField(
+                            placeholder: "Subject, Author, SHA",
+                            text: $searchText,
+                            promptSymbol: "🔍",
+                        )
+                        .frame(maxWidth: 400)                                                
                     }
                     .padding(8)
                     .background(Color(nsColor: .controlBackgroundColor))
